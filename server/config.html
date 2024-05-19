@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>AbevBot v3 - Configuration</title>
+  <style>
+    div {
+      padding: 0.2rem;
+    }
+
+    p {
+      margin: 0;
+    }
+
+    h1 {
+      margin: 0;
+    }
+
+    h2 {
+      text-align: center;
+      font-size: xx-large;
+      font-weight: bold;
+      margin: 0.2rem;
+    }
+
+    body {
+      /* Dark mode */
+      background-color: rgb(32, 32, 32);
+      color: white;
+    }
+  </style>
+  <script>
+    fetch(window.location.origin + "/config_data").then(function (resp) {
+      return resp.json();
+    }).then(function (data) {
+      // Config and secrets data received - create document contents
+      let el;
+      let secrets = data["Secrets"];
+      let secretsContents = document.getElementById("secretsContents");
+      // Twitch
+      el = document.createElement("h2");
+      el.textContent = "Twitch";
+      secretsContents.appendChild(el);
+      el = document.createElement("p");
+      createParagraphWithUrlCell(el, "You need to register an app to get required information.");
+      createParagraphWithUrlCell(el, "Steps to register an app:");
+      createParagraphWithUrlCell(el, "1. Log in to: ", "https://dev.twitch.tv", ".");
+      createParagraphWithUrlCell(el, "2. Go to dev console (via \"Your Console\" button on top right or ", "https://dev.twitch.tv/console", ").");
+      createParagraphWithUrlCell(el, "3. Click \"Register your app\" button on top right.");
+      createParagraphWithUrlCell(el, "4. Fill up required information. As Redirect URL use ", "http://localhost:3000", ".");
+      createParagraphWithUrlCell(el, "5. Next step will show secret information on your screen - don't show it on the stream.");
+      createParagraphWithUrlCell(el, "6. Go back to list of appliactions (", "https://dev.twitch.tv/console/apps", ") and click \"Manage\" button next to your newly created app.");
+      createParagraphWithUrlCell(el, "7. Copy \"Name\" and \"Customer ID\" into the fields below. Also generate new \"Client secret\" and copy that too.");
+      secretsContents.appendChild(el);
+      el = document.createElement("div");
+      el.style.display = "grid";
+      el.style.gridTemplateColumns = "max-content auto";
+      createTextCell(el, 1, 1, "Name");
+      createSecretsInputCell(el, 1, 2, "secrets_0", secrets[0]);
+      createTextCell(el, 2, 1, "Customer ID");
+      createSecretsInputCell(el, 2, 2, "secrets_1", secrets[1]);
+      createTextCell(el, 3, 1, "Password");
+      createSecretsInputCell(el, 3, 2, "secrets_2", secrets[2]);
+      secretsContents.appendChild(el);
+      // TikTok
+      // Spotify
+      // Discord
+
+      let config = data["Config"];
+      let configContents = document.getElementById("configContents");
+      el = document.createElement("h2");
+      el.textContent = "Channel name";
+      configContents.appendChild(el);
+      el = document.createElement("p");
+      el.textContent = "Channel name the bot should connect to.";
+      configContents.appendChild(el);
+      el = document.createElement("div");
+      el.style.display = "grid";
+      el.style.gridTemplateColumns = "max-content auto";
+      createTextCell(el, 1, 1, "Channel name");
+      createInputCell(el, 1, 2, "config_0", config[0]);
+      configContents.appendChild(el);
+    });
+
+    function createTextCell(parent, row, column, value) {
+      let div = document.createElement("div");
+      div.style.gridArea = row + " / " + column + " / " + (row + 1) + " / " + (column + 1);
+      div.style.border = "solid 1px black";
+      div.textContent = value;
+      parent.appendChild(div);
+    }
+
+    function createSecretsInputCell(parent, row, column, id, value) {
+      let div = document.createElement("div");
+      div.style.gridArea = row + " / " + column + " / " + (row + 1) + " / " + (column + 1);
+      div.style.border = "solid 1px black";
+      let el2 = document.createElement("input");
+      el2.type = "password"
+      el2.value = value;
+      el2.id = id;
+      div.appendChild(el2);
+      el2 = document.createElement("input");
+      el2.type = "checkbox";
+      el2.onclick = () => showInputContent(id);
+      div.appendChild(el2);
+      parent.appendChild(div);
+    }
+
+    function createInputCell(parent, row, column, id, value) {
+      let div = document.createElement("div");
+      div.style.gridArea = row + " / " + column + " / " + (row + 1) + " / " + (column + 1);
+      div.style.border = "solid 1px black";
+      let el = document.createElement("input");
+      el.value = value;
+      el.id = id;
+      div.appendChild(el);
+      parent.appendChild(div);
+    }
+
+    function createParagraphWithUrlCell(parent, prefix, url, sufix) {
+      let el = document.createElement("p");
+      el.innerHTML = prefix;
+      if (url?.length > 0) {
+        let el2 = document.createElement("a");
+        el2.href = url;
+        el2.target = '_blank';
+        el2.innerHTML = url;
+        el.appendChild(el2);
+      }
+      if (sufix?.length > 0) {
+        el.appendChild(document.createTextNode(sufix));
+      }
+      parent.appendChild(el);
+    }
+
+    function toggleSecrets() {
+      document.getElementById("secretsDiv").hidden ^= true;
+    }
+
+    function toggleConfig() {
+      document.getElementById("configDiv").hidden ^= true;
+    }
+
+    function updateSecrets() {
+      let secretsData = [];
+      for (let i = 0; i < 3; i++) {
+        secretsData[i] = document.getElementById("secrets_" + i).value;
+      }
+      fetch(window.location.origin + "/secrets_update", {
+        method: "POST",
+        headers: {
+          "Content-type": "application/json; charset=UTF-8",
+          "Secrets": JSON.stringify(secretsData)
+        }
+      }).then(function (data) {
+        if (data.status == 200) {
+          console.log("Secrets update successful");
+        } else {
+          console.log("Secrets update failed");
+        }
+      });
+    }
+
+    function updateConfig() {
+      let configData = [];
+      for (let i = 0; i < 1; i++) {
+        configData[i] = document.getElementById("config_" + i).value;
+      }
+      fetch(window.location.origin + "/config_update", {
+        method: "POST",
+        headers: {
+          "Content-type": "application/json; charset=UTF-8",
+          "Config": JSON.stringify(configData)
+        }
+      }).then(function (data) {
+        if (data.status == 200) {
+          console.log("Config update successful");
+        } else {
+          console.log("Config update failed");
+        }
+      });
+    }
+
+    function showInputContent(element) {
+      var x = document.getElementById(element);
+      if (x.type === "password") {
+        x.type = "text";
+      } else {
+        x.type = "password";
+      }
+    }
+  </script>
+</head>
+
+<body>
+  <div style="display: grid; grid-template-columns: auto 30%;">
+    <h1 style="grid-area: 1 / 1 / 2 / 2;">Secrets</h1>
+    <button style="grid-area: 1 / 2 / 2 / 3;" onclick="toggleSecrets()">Toggle visibility</button>
+  </div>
+  <div id="secretsDiv" hidden>
+    <div id="secretsContents"></div>
+    <br>
+    <div style="text-align: end;">
+      <button style="width: 15rem; height: 2rem;" onclick="updateSecrets()">Update secrets</button>
+    </div>
+  </div>
+
+  <br>
+  <hr style="border: 1px solid rgb(120, 120, 120);">
+  <br>
+
+  <div style="display: grid; grid-template-columns: auto 30%;">
+    <h1 style="grid-area: 1 / 1 / 2 / 2;">Config</h1>
+    <button style="grid-area: 1 / 2 / 2 / 3;" onclick="toggleConfig()">Toggle visibility</button>
+  </div>
+  <div id="configDiv" hidden>
+    <div id="configContents"></div>
+    <br>
+    <div style="text-align: end;">
+      <button style="width: 15rem; height: 2rem;" onclick="updateConfig()">Update config</button>
+    </div>
+  </div>
+</body>
+
+</html>
